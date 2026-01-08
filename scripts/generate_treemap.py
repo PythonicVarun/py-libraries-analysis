@@ -41,10 +41,10 @@ df_counts = (
 )
 
 color_discrete_map = {
-    "major": "#8B0000",  # Dark Red
-    "minor": "#FF0000",  # Red
-    "info": "#FFC0CB",  # Pink
-    "Unknown": "#808080",
+    "major": "#D97979",  # Soft coral red
+    "minor": "#F4A460",  # Sandy brown/orange
+    "info": "#87CEEB",  # Sky blue
+    "Unknown": "#B0B0B0",  # Light gray
 }
 
 print("Generating treemap...")
