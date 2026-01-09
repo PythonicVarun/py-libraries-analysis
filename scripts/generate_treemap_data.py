@@ -132,7 +132,7 @@ output_json = "visualizer/data.json"
 os.makedirs(os.path.dirname(output_json), exist_ok=True)
 
 with open(output_json, "w", encoding="utf-8") as f:
-    json.dump(export_data, f, indent=2)
+    json.dump(export_data, f)
 
 print(f"Data saved to {output_json}")
 print(f"  - Total Errors: {total_errors:,}")
