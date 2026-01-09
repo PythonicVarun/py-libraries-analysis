@@ -31,14 +31,14 @@ jobs:
       - name: ⚡ Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: 📄 Export treemap
+      - name: 📄 Export treemap data
         run: |
-          uv run scripts/generate_treemap.py
+          uv run scripts/generate_treemap_data.py
 
       - name: 📦 Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './output'
+          path: './visualizer'
 
   deploy:
     needs: build

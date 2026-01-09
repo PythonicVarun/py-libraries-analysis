@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Package Error Analysis - Treemap Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-3.3.1.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .visualization-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viz-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 35px 40px;
+            color: white;
+        }
+
+        .viz-header h1 {
+            margin: 0 0 12px 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .viz-header p {
+            margin: 0;
+            font-size: 16px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.primary {
+            border-left-color: #667eea;
+        }
+
+        .stat-card.severity-blocker {
+            border-left-color: #C62828;
+        }
+
+        .stat-card.severity-critical {
+            border-left-color: #E53935;
+        }
+
+        .stat-card.severity-major {
+            border-left-color: #EF7B7B;
+        }
+
+        .stat-card.severity-minor {
+            border-left-color: #FFB74D;
+        }
+
+        .stat-card.severity-info {
+            border-left-color: #64B5F6;
+        }
+
+        .stat-card.severity-unknown {
+            border-left-color: #9E9E9E;
+        }
+
+        .stat-card.info-card {
+            border-left-color: #48bb78;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card p {
+            margin: 0;
+            font-size: 32px;
+            color: #2d3748;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-card span {
+            display: block;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #a0aec0;
+            font-weight: 400;
+        }
+
+        /* Filter Section */
+        .filter-container {
+            display: flex;
+            gap: 20px;
+            padding: 25px 40px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2d3748;
+            background: white;
+            min-width: 200px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .filter-group select:hover {
+            border-color: #667eea;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .filter-reset {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            margin-top: 22px;
+        }
+
+        .filter-reset:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .filter-status {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 22px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .filter-status strong {
+            color: #667eea;
+        }
+
+        /* Chart & Legend */
+        .chart-container {
+            padding: 40px;
+            background: white;
+            min-height: 500px;
+        }
+
+        .severity-legend {
+            display: flex;
+            gap: 15px;
+            padding: 25px 40px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .severity-legend-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-right: 15px;
+            font-size: 15px;
+            padding-top: 10px;
+        }
+
+        .severity-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #4a5568;
+            padding: 10px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            transition: background 0.2s;
+            max-width: 400px;
+        }
+
+        .severity-item:hover {
+            background: #edf2f7;
+        }
+
+        .severity-color {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .footer {
+            padding: 20px 40px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Details Panel */
+        .details-panel {
+            padding: 30px 40px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .details-panel.visible {
+            display: block;
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .details-header h2 {
+            font-size: 20px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .details-header .severity-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .details-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #718096;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .details-close:hover {
+            background: #e2e8f0;
+        }
+
+        .details-meta {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .details-meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .details-meta-item label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .details-meta-item span {
+            font-size: 16px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .details-examples {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .details-examples h3 {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .example-item {
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            color: #4a5568;
+            border-left: 3px solid #667eea;
+            word-break: break-word;
+        }
+
+        .example-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .no-examples {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .viz-header {
+                padding: 25px 20px;
+            }
+
+            .viz-header h1 {
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                padding: 20px;
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                padding: 20px;
+            }
+
+            .severity-legend {
+                padding: 20px;
+                flex-direction: column;
+            }
+
+            .severity-item {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <h3>Loading Analysis Data...</h3>
+    </div>
+
+    <div class="visualization-container" style="visibility: hidden">
+        <!-- Header Section -->
+        <div class="viz-header">
+            <h1>Python Package Error Analysis</h1>
+            <p>Comprehensive error frequency distribution across top Python packages</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid" id="stats-grid">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="package-filter">📦 Package</label>
+                <select id="package-filter">
+                    <option value="">All Packages</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="error-filter">🔍 Error Type</label>
+                <select id="error-filter">
+                    <option value="">All Error Types</option>
+                </select>
+            </div>
+            <button class="filter-reset" onclick="resetFilters()">Reset Filters</button>
+            <span class="filter-status" id="filter-status">Showing: <strong>All Data</strong></span>
+        </div>
+
+        <!-- Treemap Chart -->
+        <div class="chart-container">
+            <div id="treemap"></div>
+            <div id="no-data-message" style="display: none; text-align: center; padding: 60px 20px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+                <h3 style="font-size: 20px; color: #2d3748; margin-bottom: 10px; font-weight: 600;">No Matching Data</h3>
+                <p style="color: #718096; font-size: 15px;">No errors found matching your selected filters. Try adjusting criteria to see results.</p>
+            </div>
+        </div>
+
+        <!-- Details Panel -->
+        <div class="details-panel" id="details-panel">
+            <div class="details-header">
+                <h2>
+                    <span id="details-package"></span>
+                    <span class="severity-badge" id="details-severity-badge"></span>
+                </h2>
+                <button class="details-close" onclick="closeDetails()">&times;</button>
+            </div>
+            <div class="details-meta">
+                <div class="details-meta-item">
+                    <label>Error Type</label>
+                    <span id="details-error-type"></span>
+                </div>
+                <div class="details-meta-item">
+                    <label>Severity</label>
+                    <span id="details-severity"></span>
+                </div>
+                <div class="details-meta-item">
+                    <label>Count</label>
+                    <span id="details-count"></span>
+                </div>
+            </div>
+            <div class="details-examples">
+                <h3>Example Errors</h3>
+                <div id="details-examples-list"></div>
+            </div>
+        </div>
+
+        <!-- Severity Legend -->
+        <div class="severity-legend" id="severity-legend">
+            <span class="severity-legend-title">Severity Levels:</span>
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                <a
+                    href="https://github.com/PythonicVarun/py-libraries-analysis"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Generated from analysis of top downloaded Python packages
+                </a> • Click on sections to drill down • Hover for detailed information</p>
+        </div>
+    </div>
+
+    <script>
+        let fullData = [];
+        let colorMap = {};
+
+        async function loadData() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) throw new Error('Failed to load data.json');
+
+                const data = await response.json();
+                fullData = data.records;
+                const stats = data.stats;
+                const meta = data.meta;
+                colorMap = meta.color_map;
+
+                renderStats(stats, meta);
+                renderFilters();
+                renderLegend(meta.existing_severities, meta.severity_info);
+
+                // Show container
+                document.querySelector('.visualization-container').style.visibility = 'visible';
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                // Initial Chart Render
+                updateChart(fullData);
+                updateFilterStatus('', '', fullData);
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading-overlay').innerHTML = `
+                    <h3 style="color: #c62828">Error loading data</h3>
+                    <p>${error.message}</p>
+                    <p>Make sure you are running this on a web server or allow local file access.</p>
+                `;
+            }
+        }
+
+        function renderStats(stats, meta) {
+            const grid = document.getElementById('stats-grid');
+            let html = `
+                <div class="stat-card primary">
+                    <h3>Total Errors</h3>
+                    <p>${stats.total_errors.toLocaleString()}</p>
+                    <span>Across all packages</span>
+                </div>
+            `;
+
+            const severities = ["blocker", "critical", "major", "minor", "info", "unknown"];
+            severities.forEach(sev => {
+                if (stats.severity_counts[sev]) {
+                    const info = meta.severity_info[sev];
+                    const count = stats.severity_counts[sev];
+                    const pct = (count / stats.total_errors * 100).toFixed(1);
+                    html += `
+                        <div class="stat-card severity-${sev}">
+                            <h3>${info.icon} ${info.label}</h3>
+                            <p>${count.toLocaleString()}</p>
+                            <span>${pct}% of total</span>
+                        </div>
+                    `;
+                }
+            });
+
+            html += `
+                <div class="stat-card info-card">
+                    <h3>📦 Packages</h3>
+                    <p>${stats.unique_packages.toLocaleString()}</p>
+                    <span>Unique packages analyzed</span>
+                </div>
+                <div class="stat-card info-card">
+                    <h3>🔍 Error Types</h3>
+                    <p>${stats.unique_error_types.toLocaleString()}</p>
+                    <span>Distinct error categories</span>
+                </div>
+            `;
+
+            grid.innerHTML = html;
+        }
+
+        function renderFilters() {
+            const packages = [...new Set(fullData.map(d => d.package))].sort();
+            const errors = [...new Set(fullData.map(d => d.check_name))].sort();
+
+            const pkgSelect = document.getElementById('package-filter');
+            packages.forEach(pkg => {
+                const opt = document.createElement('option');
+                opt.value = pkg;
+                opt.textContent = pkg;
+                pkgSelect.appendChild(opt);
+            });
+
+            const errSelect = document.getElementById('error-filter');
+            errors.forEach(err => {
+                const opt = document.createElement('option');
+                opt.value = err;
+                opt.textContent = err;
+                errSelect.appendChild(opt);
+            });
+        }
+
+        function renderLegend(existingSeverities, severityInfo) {
+            const container = document.getElementById('severity-legend');
+            let html = '<span class="severity-legend-title">Severity Levels:</span>';
+
+            const severities = ["blocker", "critical", "major", "minor", "info", "unknown"];
+            severities.forEach(sev => {
+                if (existingSeverities.includes(sev)) {
+                    const info = severityInfo[sev];
+                    html += `
+                        <div class="severity-item">
+                            <div class="severity-color" style="background: ${info.color};"></div>
+                            <span>${info.icon} <strong>${info.label}</strong> - ${info.description}</span>
+                        </div>
+                    `;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function applyFilters() {
+            const packageFilter = document.getElementById('package-filter').value;
+            const errorFilter = document.getElementById('error-filter').value;
+
+            let filteredData = fullData;
+
+            if (packageFilter) {
+                filteredData = filteredData.filter(d => d.package === packageFilter);
+            }
+            if (errorFilter) {
+                filteredData = filteredData.filter(d => d.check_name === errorFilter);
+            }
+
+            updateChart(filteredData);
+            updateFilterStatus(packageFilter, errorFilter, filteredData);
+        }
+
+        function updateFilterStatus(pkg, err, data) {
+            const status = document.getElementById('filter-status');
+            const totalErrors = data.reduce((sum, d) => sum + d.count, 0);
+            let filterText = [];
+            if (pkg) filterText.push(`Package: ${pkg}`);
+            if (err) filterText.push(`Error: ${err}`);
+
+            if (filterText.length === 0) {
+                status.innerHTML = `Showing: <strong>All Data</strong> (${totalErrors.toLocaleString()} errors)`;
+            } else {
+                status.innerHTML = `Filtered by: <strong>${filterText.join(', ')}</strong> (${totalErrors.toLocaleString()} errors)`;
+            }
+        }
+
+        function updateChart(data) {
+            const treemapDiv = document.getElementById('treemap');
+            const noDataMsg = document.getElementById('no-data-message');
+
+            if (data.length === 0) {
+                if (treemapDiv) treemapDiv.style.display = 'none';
+                if (noDataMsg) noDataMsg.style.display = 'block';
+                closeDetails();
+                return;
+            }
+
+            if (treemapDiv) treemapDiv.style.display = 'block';
+            if (noDataMsg) noDataMsg.style.display = 'none';
+
+            // Calculate totals for parent nodes
+            const checkTotals = {};
+            const sevTotals = {};
+            let rootTotal = 0;
+
+            data.forEach(d => {
+                const checkKey = d.severity + '///' + d.check_name;
+                checkTotals[checkKey] = (checkTotals[checkKey] || 0) + d.count;
+                sevTotals[d.severity] = (sevTotals[d.severity] || 0) + d.count;
+                rootTotal += d.count;
+            });
+
+            const ids = ['root'];
+            const labels = ['All Errors'];
+            const parents = [''];
+            const values = [rootTotal];
+            const colors = ['#333333'];
+            const customdata = [[null, null]];
+
+            const severities = [...new Set(data.map(d => d.severity))];
+            severities.forEach(sev => {
+                ids.push(sev);
+                labels.push(sev);
+                parents.push('root');
+                values.push(sevTotals[sev]);
+                colors.push(colorMap[sev] || '#9E9E9E');
+                customdata.push([sev, '']);
+            });
+
+            const checkNames = [...new Set(data.map(d => d.severity + '///' + d.check_name))];
+            checkNames.forEach(cn => {
+                const [sev, check] = cn.split('///');
+                const id = sev + '///' + check;
+                ids.push(id);
+                labels.push(check);
+                parents.push(sev);
+                values.push(checkTotals[cn]);
+                colors.push(colorMap[sev] || '#9E9E9E');
+                customdata.push([sev, '']);
+            });
+
+            data.forEach(d => {
+                const parentId = d.severity + '///' + d.check_name;
+                const id = parentId + '///' + d.package;
+                ids.push(id);
+                labels.push(d.package);
+                parents.push(parentId);
+                values.push(d.count);
+                colors.push(colorMap[d.severity] || '#9E9E9E');
+                customdata.push([d.severity, d.examples || '']);
+            });
+
+            const trace = {
+                type: 'treemap',
+                ids: ids,
+                labels: labels,
+                parents: parents,
+                values: values,
+                marker: {
+                    colors: colors,
+                    line: { width: 1, color: 'white' },
+                    cornerradius: 3,
+                },
+                customdata: customdata,
+                hovertemplate: '<b>%{label}</b><br><br><b>Count:</b> %{value}<br><b>Severity:</b> %{customdata[0]}<br><b>Examples:</b><br>%{customdata[1]}<extra></extra>',
+                branchvalues: 'total',
+                domain: { x: [0.0, 1.0], y: [0.0, 1.0] },
+            };
+
+            currentFilteredData = data;
+
+            const packageFilter = document.getElementById('package-filter').value;
+            const errorFilter = document.getElementById('error-filter').value;
+
+            if (packageFilter && errorFilter && data.length === 1) {
+                setTimeout(() => showDetails(data[0]), 500);
+            }
+
+            const layout = {
+                legend: { tracegroupgap: 0 },
+                title: {
+                    text: "Error Frequency Treemap (Size=Frequency, Color=Severity)",
+                    font: { size: 24, family: "Arial, sans-serif", color: "#2d3748" },
+                    x: 0.5,
+                    xanchor: "center",
+                    y: 0.98,
+                    yanchor: "top",
+                },
+                margin: { t: 80, l: 25, r: 25, b: 25 },
+                font: { family: "Arial, sans-serif", size: 12, color: "#2d3748" },
+                paper_bgcolor: "white",
+                plot_bgcolor: "white",
+                height: 1000,
+                template: {
+                    layout: {
+                        autotypenumbers: "strict",
+                        font: { color: "#2a3f5f" },
+                        hovermode: "closest",
+                        hoverlabel: { align: "left" },
+                        paper_bgcolor: "white",
+                        plot_bgcolor: "#E5ECF6",
+                        shapedefaults: { line: { color: "#2a3f5f" } },
+                        annotationdefaults: { arrowcolor: "#2a3f5f", arrowhead: 0, arrowwidth: 1 },
+                        geo: {
+                            bgcolor: "white",
+                            landcolor: "#E5ECF6",
+                            subunitcolor: "white",
+                            showland: true,
+                            showlakes: true,
+                            lakecolor: "white",
+                        },
+                        title: { x: 0.05 },
+                        mapbox: { style: "light" },
+                    }
+                }
+            };
+
+            Plotly.react('treemap', [trace], layout, { responsive: true });
+
+            // Add click handler for package-level items
+            treemapDiv.removeAllListeners && treemapDiv.removeAllListeners('plotly_click');
+            treemapDiv.on('plotly_click', function(eventData) {
+                if (eventData.points && eventData.points.length > 0) {
+                    const point = eventData.points[0];
+                    const id = point.id;
+
+                    if (id && id.split('///').length === 3) {
+                        const [severity, checkName, packageName] = id.split('///');
+
+                        // Find the data for this package
+                        const packageData = currentFilteredData.find(d =>
+                            d.severity === severity &&
+                            d.check_name === checkName &&
+                            d.package === packageName
+                        );
+
+                        if (packageData) {
+                            showDetails(packageData);
+                        }
+
+                        // Stop propagation to avoid zooming
+                        eventData.stopPropagation();
+                    }
+                }
+            });
+        }
+
+        let currentFilteredData = [];
+        function showDetails(packageData) {
+            const panel = document.getElementById('details-panel');
+            const severityColors = {
+                'blocker': '#C62828',
+                'critical': '#E53935',
+                'major': '#EF7B7B',
+                'minor': '#FFB74D',
+                'info': '#64B5F6',
+                'unknown': '#9E9E9E'
+            };
+
+            document.getElementById('details-package').textContent = packageData.package;
+            document.getElementById('details-error-type').textContent = packageData.check_name;
+            document.getElementById('details-severity').textContent = packageData.severity;
+            document.getElementById('details-count').textContent = packageData.count.toLocaleString();
+
+            const badge = document.getElementById('details-severity-badge');
+            badge.textContent = packageData.severity;
+            badge.style.background = severityColors[packageData.severity] || '#9E9E9E';
+            badge.style.color = 'white';
+
+            const examplesList = document.getElementById('details-examples-list');
+            if (packageData.examples && packageData.examples.trim()) {
+                const examples = packageData.examples.split('<br>').filter(e => e.trim());
+                examplesList.innerHTML = examples.map(ex =>
+                    `<div class="example-item">${ex.replace(/^\s*•\s*/, '')}</div>`
+                ).join('');
+            } else {
+                examplesList.innerHTML = '<div class="no-examples">No example errors available</div>';
+            }
+
+            panel.classList.add('visible');
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeDetails() {
+            document.getElementById('details-panel').classList.remove('visible');
+        }
+
+        function resetFilters() {
+            document.getElementById('package-filter').value = '';
+            document.getElementById('error-filter').value = '';
+            applyFilters();
+        }
+
+        document.getElementById('package-filter').addEventListener('change', applyFilters);
+        document.getElementById('error-filter').addEventListener('change', applyFilters);
+
+        loadData();
+    </script>
+</body>
+
+</html>
