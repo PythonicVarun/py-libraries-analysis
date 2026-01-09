@@ -1,0 +1,1 @@
+[{"check_name":"unresolved-attribute","description":"unresolved-attribute: Object of type `((Any, /) -> bool) & ~FunctionType` has no attribute `__name__`","severity":"major","fingerprint":"5b9887a40e9c6100","location":{"path":"cloned_repos/annotated-types/annotated_types/__init__.py","positions":{"begin":{"line":346,"column":45},"end":{"line":346,"column":63}}}}]

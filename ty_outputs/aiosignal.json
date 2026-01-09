@@ -1,0 +1,1 @@
+[{"check_name":"possibly-missing-attribute","description":"possibly-missing-attribute: Attribute `groupdict` may be missing on object of type `Match[str] | None`","severity":"minor","fingerprint":"385436cfb68d5c23","location":{"path":"cloned_repos/aiosignal/docs/conf.py","positions":{"begin":{"line":24,"column":25},"end":{"line":32,"column":20}}}}]

@@ -82,11 +82,15 @@ while read -r repo_obj; do
     echo "   Running ty check..."
 
     temp_file=$(mktemp)
-    uv run ty check --output-format gitlab "$clone_path" > "$temp_file" 2> /dev/null
+    timeout 5m uv run ty check --ignore unresolved-import --output-format gitlab "$clone_path" > "$temp_file" 2> /dev/null
     tool_exit_code=$?
 
+    if [ $tool_exit_code -eq 124 ]; then
+        echo -e "${RED}   Failed: Operation timed out.${NC}"
+        ((failed++))
+        failed_repos+=("$project (Timeout)")
     # Check if the file contains valid JSON
-    if jq -c . "$temp_file" > "$output_file" 2>/dev/null; then
+    elif jq -c . "$temp_file" > "$output_file" 2>/dev/null; then
         if [ $tool_exit_code -eq 0 ]; then
              echo -e "${YELLOW}   Success: Report generated (No typos found).${NC}"
         else
