@@ -3,7 +3,7 @@
 set -u
 
 # Configuration
-JSON_FILE="${1:-repos.json}"
+JSON_FILE="${1:-dataset/top-pypi-packages.json}"
 OUTPUT_DIR="${2:-ty_outputs}"
 CLONE_DIR="${3:-cloned_repos}"
 
