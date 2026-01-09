@@ -96,7 +96,6 @@ fig.update_layout(
     font=dict(family="Arial, sans-serif", size=12, color="#2d3748"),
     paper_bgcolor='white',
     plot_bgcolor='white',
-    height=800,
 )
 
 # statistics
@@ -351,13 +350,13 @@ css_style = """
         color: #718096;
         font-size: 13px;
     }
-    
+
     .footer a {
         color: #667eea;
         text-decoration: none;
         font-weight: 500;
     }
-    
+
     .footer a:hover {
         text-decoration: underline;
     }
