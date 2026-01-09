@@ -37,7 +37,7 @@ def save_to_json(data: dict, filename: str) -> None:
 
 
 def main() -> None:
-    data = get_top_packages(10)
+    data = get_top_packages(100)
     save_to_json(data["data"], "dataset/top-pypi-packages.json")
 
 
