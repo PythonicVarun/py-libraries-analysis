@@ -26,6 +26,7 @@ for js in json_files:
                             "package": package_name,
                             "check_name": item.get("check_name", "Unknown"),
                             "severity": item.get("severity", "Unknown"),
+                            "description": item.get("description", "No description"),
                         }
                     )
     except Exception as e:
@@ -37,7 +38,17 @@ if not data:
 
 df = pd.DataFrame(data)
 df_counts = (
-    df.groupby(["severity", "check_name", "package"]).size().reset_index(name="count")
+    df.groupby(["severity", "check_name", "package"])
+    .agg(
+        count=("package", "size"),
+        examples=(
+            "description",
+            lambda x: "<br>".join(
+                [f"    • {d}" for d in x.unique()[:5]]
+            ),
+        ),
+    )
+    .reset_index()
 )
 
 color_discrete_map = {
@@ -61,7 +72,11 @@ fig = px.treemap(
     color="severity",
     color_discrete_map=color_discrete_map,
     title="Error Frequency Treemap (Size=Frequency, Color=Severity)",
-    hover_data=["package", "count"],
+    custom_data=["severity", "examples"],
+)
+
+fig.update_traces(
+    hovertemplate="<b>%{label}</b><br><br><b>Count:</b> %{value}<br><b>Severity:</b> %{customdata[0]}<br><b>Examples:</b><br>%{customdata[1]}<extra></extra>"
 )
 
 fig.update_layout(margin=dict(t=50, l=25, r=25, b=25))
