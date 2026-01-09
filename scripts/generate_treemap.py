@@ -96,6 +96,7 @@ fig.update_layout(
     font=dict(family="Arial, sans-serif", size=12, color="#2d3748"),
     paper_bgcolor='white',
     plot_bgcolor='white',
+    height=1000,
 )
 
 # statistics
