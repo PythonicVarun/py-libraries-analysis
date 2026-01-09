@@ -35,9 +35,11 @@ jobs:
         run: |
           uv run scripts/generate_treemap_data.py
 
+      - name: 🦀 Install minhtml
+        run: cargo install minhtml
+
       - name: 📂 Minify Visualizer
         run: |
-          uv pip install minify-html==0.18.1
           minhtml --keep-closing-tags --minify-css --minify-js ./visualizer/*.html
 
       - name: 📦 Upload Pages Artifact
