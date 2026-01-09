@@ -36,7 +36,7 @@ jobs:
           uv run scripts/generate_treemap_data.py
 
       - name: 🙃 Install minhtml
-        run: apt-get update && apt-get install -y minify
+        run: sudo apt-get update && sudo apt-get install -y minify
 
       - name: 📂 Minify Visualizer
         run: |
