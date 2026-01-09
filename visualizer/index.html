@@ -1115,7 +1115,7 @@
                         }
 
                         // Stop propagation to avoid zooming
-                        eventData.stopPropagation();
+                        throw new Error("StopPropagation");
                     }
                 }
             });
