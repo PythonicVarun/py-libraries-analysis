@@ -5,8 +5,7 @@ description = "Static code quality audit of the most-downloaded PyPI libraries."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2.3.3",
-    "plotly>=6.5.1",
+    "pandas==2.3.3",
     "requests==2.32.5",
     "ty==0.0.10",
 ]
