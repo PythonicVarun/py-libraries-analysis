@@ -54,7 +54,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
+            background:
                 radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
                 radial-gradient(ellipse at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
@@ -713,6 +713,10 @@
         <div class="viz-header">
             <h1>&nbsp;Python Package Error Analysis</h1>
             <p>Comprehensive error frequency distribution across top Python packages • Powered by static analysis</p>
+            <div style="margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; color: var(--text-secondary); font-size: 13px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Note: <code>unresolved-import</code> errors are excluded from this analysis, assuming all external dependencies are satisfied.</span>
+            </div>
         </div>
 
         <!-- Statistics Cards -->
