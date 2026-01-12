@@ -87,37 +87,46 @@ while read -r repo_obj; do
     (
         cd "$clone_path" || exit 1
 
+        setup_success=true
+
         # create a fresh venv to ensure no contamination and correct dependency resolution
         if ! uv venv .venv > /dev/null 2>&1; then
+            setup_success=false
             echo -e "${RED}   Failed to create venv.${NC}"
-            exit 101 # Custom error code for venv failure
-        fi
+        else
+            # Activate the environment
+            source .venv/bin/activate
 
-        # Activate the environment
-        source .venv/bin/activate
+            echo "   Installing build tools..."
+            uv pip install --upgrade setuptools wheel meson ninja > /dev/null 2>&1
 
-        echo "   Installing build tools..."
-        uv pip install --upgrade setuptools wheel meson ninja > /dev/null 2>&1
+            # Build Package & Install Dependencies
+            echo "   Building and installing dependencies..."
 
-        # Build Package & Install Dependencies
-        echo "   Building and installing dependencies..."
-
-        # try to install the package 
-        if ! uv pip install . > /dev/null 2>&1; then
-            # Fallback: Try installing requirements.txt if present
-            echo -e "${YELLOW}   Standard install failed, trying to find requirements...${NC}"
-            if [[ -f "requirements.txt" ]]; then
-                uv pip install -r requirements.txt > /dev/null 2>&1
-            else
-                echo -e "${YELLOW}   Build/Install failed, proceeding anyway...${NC}"
+            # try to install the package 
+            if ! uv pip install . > /dev/null 2>&1; then
+                # Fallback: Try installing requirements.txt if present
+                echo -e "${YELLOW}   Standard install failed, trying to find requirements...${NC}"
+                if [[ -f "requirements.txt" ]]; then
+                    uv pip install -r requirements.txt > /dev/null 2>&1
+                else
+                    setup_success=false
+                    echo -e "${YELLOW}   Build/Install failed, proceeding anyway...${NC}"
+                fi
             fi
         fi
 
         # run Analysis
         echo "   Running ty check..."
 
+        EXTRA_FLAGS=""
+        if [ "$setup_success" = false ]; then
+            echo -e "${YELLOW}   Warning: Setup incomplete. Running in 'light' mode...${NC}"
+            EXTRA_FLAGS="--ignore unresolved-import"
+        fi
+
         temp_file=$(mktemp)
-        timeout 5m uv run ty check --ignore unresolved-import --output-format gitlab . > "$temp_file" 2> /dev/null
+        timeout 5m uv run ty check $EXTRA_FLAGS --output-format gitlab . > "$temp_file" 2> /dev/null
         tool_exit_code=$?
 
         if [ $tool_exit_code -eq 124 ]; then
