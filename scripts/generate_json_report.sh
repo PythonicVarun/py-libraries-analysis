@@ -80,7 +80,7 @@ while read -r repo_obj; do
         fi
 
         echo "   Initializing submodules..."
-        git submodule update --quiet --init
+        (cd "$clone_path" && git submodule update --quiet --init && cd - > /dev/null)
     fi
 
     # Start Subshell for Environment Isolation
@@ -108,7 +108,10 @@ while read -r repo_obj; do
                 # Fallback: Try installing requirements.txt if present
                 echo -e "${YELLOW}   Standard install failed, trying to find requirements...${NC}"
                 if [[ -f "requirements.txt" ]]; then
-                    uv pip install -r requirements.txt > /dev/null 2>&1
+                    if ! uv pip install -r requirements.txt > /dev/null 2>&1; then
+                        setup_success=false
+                        echo -e "${YELLOW}   Requirements install failed...${NC}"
+                    fi
                 else
                     setup_success=false
                     echo -e "${YELLOW}   Build/Install failed, proceeding anyway...${NC}"
