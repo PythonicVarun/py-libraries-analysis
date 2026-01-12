@@ -209,3 +209,6 @@ __marimo__/
 # script outputs
 visualizer/*.json
 cloned_repos/
+
+# Temporary files
+*.tmp
