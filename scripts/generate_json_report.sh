@@ -80,7 +80,7 @@ while read -r repo_obj; do
         fi
 
         echo "   Initializing submodules..."
-        git submodule update --init
+        git submodule update --quiet --init
     fi
 
     # Start Subshell for Environment Isolation
