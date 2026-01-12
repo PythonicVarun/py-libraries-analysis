@@ -109,8 +109,7 @@ while read -r repo_obj; do
             if [[ -f "requirements.txt" ]]; then
                 uv pip install -r requirements.txt > /dev/null 2>&1
             else
-                echo -e "${RED}   Build/Install failed (No setup.py or requirements found).${NC}"
-                exit 102 # Custom error code for build failure
+                echo -e "${YELLOW}   Build/Install failed, proceeding anyway...${NC}"
             fi
         fi
 
