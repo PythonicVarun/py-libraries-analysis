@@ -69,8 +69,8 @@ while read -r repo_obj; do
     if [[ -d "$clone_path" ]]; then
         echo "   Updating existing repository..."
         if ! (cd "$clone_path" && git pull --quiet); then
-             echo -e "${RED}   Failed to pull changes.${NC}"
-             ((failed++)); failed_repos+=("$project (Git Pull)"); continue
+            echo -e "${RED}   Failed to pull changes.${NC}"
+            ((failed++)); failed_repos+=("$project (Git Pull)"); continue
         fi
     else
         echo "   Cloning repository..."
@@ -104,14 +104,14 @@ while read -r repo_obj; do
 
         # try to install the package 
         if ! uv pip install . > /dev/null 2>&1; then
-             # Fallback: Try installing requirements.txt if present
-             echo -e "${YELLOW}   Standard install failed, trying to find requirements...${NC}"
-             if [[ -f "requirements.txt" ]]; then
+            # Fallback: Try installing requirements.txt if present
+            echo -e "${YELLOW}   Standard install failed, trying to find requirements...${NC}"
+            if [[ -f "requirements.txt" ]]; then
                 uv pip install -r requirements.txt > /dev/null 2>&1
-             else
+            else
                 echo -e "${RED}   Build/Install failed (No setup.py or requirements found).${NC}"
                 exit 102 # Custom error code for build failure
-             fi
+            fi
         fi
 
         # run Analysis
@@ -129,9 +129,9 @@ while read -r repo_obj; do
         # Validate JSON output
         if jq -c . "$temp_file" > "$output_file" 2>/dev/null; then
             if [ $tool_exit_code -eq 0 ]; then
-                 echo -e "${YELLOW}   Success: Report generated (No issues found).${NC}"
+                echo -e "${YELLOW}   Success: Report generated (No issues found).${NC}"
             else
-                 echo -e "${GREEN}   Success: Report generated (Issues found).${NC}"
+                echo -e "${GREEN}   Success: Report generated (Issues found).${NC}"
             fi
             exit 0
         else
