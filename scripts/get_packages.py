@@ -4,6 +4,8 @@ from pathlib import Path
 
 import requests
 
+corrections = {"typing-extensions": "https://github.com/python/typing_extensions"}
+
 
 def get_top_packages(n: int) -> dict:
     params = {"user": "demo", "default_format": "JSON"}
@@ -28,6 +30,14 @@ def get_top_packages(n: int) -> dict:
     return response.json()
 
 
+def correct_repos(data: list) -> list:
+    for item in data:
+        project = item["project"]
+        if project in corrections:
+            item["repo"] = corrections[project]
+    return data
+
+
 def save_to_json(data: dict, filename: str) -> None:
     dir, _ = os.path.split(filename)
     Path(dir).mkdir(parents=True, exist_ok=True)
@@ -38,6 +48,7 @@ def save_to_json(data: dict, filename: str) -> None:
 
 def main() -> None:
     data = get_top_packages(100)
+    data["data"] = correct_repos(data["data"])
     save_to_json(data["data"], "dataset/top-pypi-packages.json")
 
 

@@ -50,7 +50,7 @@ Static code quality audit of the most-downloaded PyPI libraries. Code quality an
     ```bash
     # Ensure usage permissions
     chmod +x scripts/generate_json_report.sh
-    
+
     # Run the script
     ./scripts/generate_json_report.sh
     ```
