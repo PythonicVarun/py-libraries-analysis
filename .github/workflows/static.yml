@@ -38,14 +38,20 @@ jobs:
       - name: 🙃 Install minhtml
         run: sudo apt-get update && sudo apt-get install -y minify
 
-      - name: 📂 Minify Visualizer
+      - name: 🔨 Build Site
         run: |
-          minify -o ./visualizer/index.html ./visualizer/index.html
+          mkdir -p _site
+          cp -r datastory/* _site/
+          cp -r visualizer _site/
+
+      - name: 📂 Minify static files
+        run: |
+          find _site -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" -o -name "*.json" \) -exec minify -o {} {} \;
 
       - name: 📦 Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './visualizer'
+          path: './_site'
 
   deploy:
     needs: build

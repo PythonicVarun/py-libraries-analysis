@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The TypeError Detective: A Journey Through Python's None-Handling Underworld</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sqlalchemy-red: #dc2626;
+            --arrow-amber: #f59e0b;
+            --sklearn-purple: #8b5cf6;
+            --paper-cream: #fdfbf7;
+            --ink-dark: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Source Serif 4', Georgia, serif;
+            background: var(--paper-cream);
+            color: var(--ink-dark);
+            line-height: 1.7;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sans {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        .headline {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .deck {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            line-height: 1.6;
+        }
+
+        .byline {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .chapter-number {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .pull-quote {
+            font-size: 1.5rem;
+            font-style: italic;
+            border-left: 4px solid #e5e5e5;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .github-quote {
+            background: linear-gradient(135deg, #f6f8fa 0%, #eef1f4 100%);
+            border: 1px solid #d0d7de;
+            border-left: 4px solid #0969da;
+            border-radius: 6px;
+            padding: 1.25rem 1.5rem;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        .github-quote.defensive {
+            border-left-color: var(--sqlalchemy-red);
+        }
+
+        .github-quote.pragmatic {
+            border-left-color: var(--arrow-amber);
+        }
+
+        .github-quote.action {
+            border-left-color: var(--sklearn-purple);
+        }
+
+        .code-block {
+            background: #0d1117;
+            color: #c9d1d9;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .code-block .keyword { color: #ff7b72; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .comment { color: #8b949e; }
+        .code-block .function { color: #d2a8ff; }
+        .code-block .none-val { color: #ff7b72; font-weight: 600; }
+        .code-block .error-highlight {
+            background: rgba(248, 81, 73, 0.2);
+            display: block;
+            margin: 0 -1rem;
+            padding: 0 1rem;
+            border-left: 3px solid #f85149;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .response-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .response-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        .response-card.selected {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px currentColor;
+        }
+
+        .timeline-track {
+            height: 6px;
+            background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 100%);
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .timeline-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1.5s ease-out;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .response-meter {
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .response-meter-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        .spectrum-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .spectrum-segment {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 20px 8px rgba(245, 158, 11, 0.2); }
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes typewriter {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        .drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s ease-out;
+        }
+
+        .drawer.open {
+            max-height: 2000px;
+        }
+
+        .match-option {
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .match-option:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .match-option.matched {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .drop-zone {
+            border: 2px dashed #d1d5db;
+            transition: all 0.2s ease;
+            min-height: 60px;
+        }
+
+        .drop-zone.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .drop-zone.filled {
+            border-style: solid;
+            border-color: currentColor;
+        }
+
+        .counter-animate {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .response-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .star-icon {
+            display: inline-block;
+            color: #f59e0b;
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--sqlalchemy-red), var(--arrow-amber), var(--sklearn-purple));
+            z-index: 1000;
+            transition: width 0.1s linear;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-indicator" id="scroll-progress"></div>
+
+    <!-- Hero Section -->
+    <header class="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+        <!-- Floating None keywords background -->
+        <div class="absolute inset-0 overflow-hidden opacity-[0.07] select-none">
+            <div class="absolute top-[10%] left-[5%] text-7xl mono text-white transform -rotate-12">None</div>
+            <div class="absolute top-[25%] right-[10%] text-5xl mono text-white transform rotate-6">TypeError</div>
+            <div class="absolute top-[50%] left-[15%] text-6xl mono text-white transform rotate-3">AttributeError</div>
+            <div class="absolute top-[65%] right-[20%] text-4xl mono text-white transform -rotate-8">NoneType</div>
+            <div class="absolute top-[80%] left-[30%] text-5xl mono text-white transform rotate-12">.get()</div>
+            <div class="absolute top-[15%] left-[60%] text-3xl mono text-white transform -rotate-3">os.environ</div>
+            <div class="absolute top-[40%] right-[5%] text-4xl mono text-white transform rotate-9">Optional</div>
+        </div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center text-white">
+            <p class="byline text-amber-400 mb-8 tracking-widest">A Data Story</p>
+
+            <h1 class="headline font-bold mb-8">
+                The <span class="mono text-red-400">TypeError</span> Detective
+            </h1>
+
+            <p class="deck text-slate-300 max-w-2xl mx-auto mb-6">
+                A Journey Through Python's None-Handling Underworld
+            </p>
+
+            <div class="w-24 h-px bg-gradient-to-r from-transparent via-slate-500 to-transparent mx-auto my-10"></div>
+
+            <p class="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
+                Three identical type errors. Three wildly different responses.
+                A window into the hidden sociology of open-source maintenance.
+            </p>
+
+            <!-- Key Stats Preview -->
+            <div class="flex flex-wrap justify-center gap-6 mt-16 text-sm">
+                <div class="stat-card bg-white/10 backdrop-blur px-6 py-4 rounded-xl">
+                    <div class="text-3xl font-bold text-black counter-animate" id="hero-stars">0</div>
+                    <div class="text-slate-400 mt-1">Combined GitHub Stars</div>
+                </div>
+                <div class="stat-card bg-white/10 backdrop-blur px-6 py-4 rounded-xl">
+                    <div class="text-3xl font-bold text-black">3</div>
+                    <div class="text-slate-400 mt-1">Issues Filed</div>
+                </div>
+                <div class="stat-card bg-white/10 backdrop-blur px-6 py-4 rounded-xl">
+                    <div class="text-3xl font-bold text-black">0</div>
+                    <div class="text-slate-400 mt-1">Bugs Actually Fixed</div>
+                </div>
+            </div>
+
+            <div class="mt-20 animate-bounce">
+                <svg class="w-8 h-8 mx-auto text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+                <p class="text-slate-500 text-sm mt-2">Scroll to investigate</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-6 py-24">
+
+        <!-- Act I: The Investigation -->
+        <section class="fade-in mb-32">
+            <p class="chapter-number text-slate-400 mb-3">Act I</p>
+            <h2 class="text-4xl font-bold mb-8">The Investigation</h2>
+
+            <p class="text-xl leading-relaxed mb-6">
+                It began with a simple hypothesis: <em>What if we could find bugs before users do?</em>
+            </p>
+
+            <p class="text-lg leading-relaxed mb-6">
+                A developer armed with a type-checking tool started scanning Python's most battle-tested libraries.
+                The target: operations on values that might be <code class="mono bg-slate-100 px-2 py-1 rounded text-red-600 text-sm">None</code>.
+            </p>
+
+            <p class="text-lg leading-relaxed mb-8">
+                The subjects were three titans of the Python ecosystem:
+            </p>
+
+            <!-- Project Cards -->
+            <div class="grid gap-4 mb-12">
+                <div class="flex items-center gap-4 p-5 bg-white rounded-xl shadow-sm border-l-4 border-red-500">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                        <span class="text-red-600 font-bold text-lg">S</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold">SQLAlchemy</h3>
+                            <span class="text-amber-500 star-icon">★</span>
+                            <span class="text-sm text-slate-500 mono">11.4K</span>
+                        </div>
+                        <p class="text-sm text-slate-600">The database toolkit that powers Python's data layer</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-5 bg-white rounded-xl shadow-sm border-l-4 border-amber-500">
+                    <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                        <span class="text-amber-600 font-bold text-lg">A</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold">Apache Arrow</h3>
+                            <span class="text-amber-500 star-icon">★</span>
+                            <span class="text-sm text-slate-500 mono">16.4K</span>
+                        </div>
+                        <p class="text-sm text-slate-600">The backbone of modern columnar data processing</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-5 bg-white rounded-xl shadow-sm border-l-4 border-purple-500">
+                    <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                        <span class="text-purple-600 font-bold text-lg">sk</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold">scikit-learn</h3>
+                            <span class="text-amber-500 star-icon">★</span>
+                            <span class="text-sm text-slate-500 mono">64.8K</span>
+                        </div>
+                        <p class="text-sm text-slate-600">Machine learning's gold standard library</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Process -->
+            <div class="bg-slate-50 rounded-2xl p-8 mb-12">
+                <h3 class="font-bold text-lg mb-6 sans">The Verification Pipeline</h3>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                        <div>
+                            <p class="font-semibold">Type Checker Analysis</p>
+                            <p class="text-slate-600 text-sm">Automated scan finds potential None-access violations</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                        <div>
+                            <p class="font-semibold">LLM Filtering</p>
+                            <p class="text-slate-600 text-sm">
+                                Language model triages obvious false positives.
+                                <a href="https://github.com/PythonicVarun/py-libraries-analysis/tree/ty-report-verification/verification" target="_blank" class="text-purple-600 hover:underline">View verification logs →</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                        <div>
+                            <p class="font-semibold">Manual Review</p>
+                            <p class="text-slate-600 text-sm">Human manually examines code context and intent</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                        <div>
+                            <p class="font-semibold">Reproduction Code</p>
+                            <p class="text-slate-600 text-sm">Write minimal code that triggers the actual error</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-lg leading-relaxed">
+                Three bugs made it through. Three issues were filed. What happened next reveals
+                something profound about how open-source communities really work.
+            </p>
+        </section>
+
+        <!-- Prediction Game: Response Time -->
+        <section class="fade-in mb-32">
+            <p class="chapter-number text-slate-400 mb-3">Interactive</p>
+            <h2 class="text-3xl font-bold mb-4">Predict the Response Time</h2>
+            <p class="text-lg text-slate-600 mb-8">
+                How long did each maintainer take to respond? Drag the sliders to your guess, then reveal the truth.
+            </p>
+
+            <div id="response-time-game" class="space-y-8">
+                <!-- SQLAlchemy Slider -->
+                <div class="bg-white rounded-xl p-6 shadow-sm" data-project="sqlalchemy" data-actual="8">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-4 h-4 rounded-full bg-red-500"></div>
+                        <span class="font-bold">SQLAlchemy</span>
+                    </div>
+                    <div class="mb-4">
+                        <input type="range" min="1" max="1440" value="60"
+                               class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider-response"
+                               data-project="sqlalchemy">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1 mono">
+                            <span>1 min</span>
+                            <span>1 hour</span>
+                            <span>12 hours</span>
+                            <span>24 hours</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-lg font-semibold mono guess-display">Your guess: 1 hour</p>
+                    <div class="result-display hidden mt-4 text-center"></div>
+                </div>
+
+                <!-- Arrow Slider -->
+                <div class="bg-white rounded-xl p-6 shadow-sm" data-project="arrow" data-actual="17">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-4 h-4 rounded-full bg-amber-500"></div>
+                        <span class="font-bold">Apache Arrow</span>
+                    </div>
+                    <div class="mb-4">
+                        <input type="range" min="1" max="1440" value="120"
+                               class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider-response"
+                               data-project="arrow">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1 mono">
+                            <span>1 min</span>
+                            <span>1 hour</span>
+                            <span>12 hours</span>
+                            <span>24 hours</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-lg font-semibold mono guess-display">Your guess: 2 hours</p>
+                    <div class="result-display hidden mt-4 text-center"></div>
+                </div>
+
+                <!-- scikit-learn Slider -->
+                <div class="bg-white rounded-xl p-6 shadow-sm" data-project="sklearn" data-actual="10080">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-4 h-4 rounded-full bg-purple-500"></div>
+                        <span class="font-bold">scikit-learn</span>
+                        <span class="text-xs text-slate-400">(meaningful engagement)</span>
+                    </div>
+                    <div class="mb-4">
+                        <input type="range" min="1" max="20160" value="1440"
+                               class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider-response"
+                               data-project="sklearn">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1 mono">
+                            <span>1 min</span>
+                            <span>1 day</span>
+                            <span>7 days</span>
+                            <span>14 days</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-lg font-semibold mono guess-display">Your guess: 1 day</p>
+                    <div class="result-display hidden mt-4 text-center"></div>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <button id="reveal-times-btn" class="bg-slate-900 text-white px-8 py-3 rounded-lg font-semibold sans hover:bg-slate-700 transition">
+                    Reveal Actual Response Times →
+                </button>
+            </div>
+        </section>
+
+        <!-- Match the Response Game -->
+        <section class="fade-in mb-32">
+            <p class="chapter-number text-slate-400 mb-3">Interactive</p>
+            <h2 class="text-3xl font-bold mb-4">Match the Response</h2>
+            <p class="text-lg text-slate-600 mb-8">
+                Before we reveal the details, can you guess which project gave which response? Click a response, then click a project.
+            </p>
+
+            <div id="match-game" class="mb-8">
+                <!-- Responses to Match -->
+                <div class="grid gap-3 mb-8">
+                    <div class="match-option p-4 bg-white rounded-lg shadow-sm cursor-pointer" data-response="defensive">
+                        <p class="font-semibold text-red-600 mb-1">"Not a bug, use it correctly"</p>
+                        <p class="text-sm text-slate-500">Issue closed, converted to discussion</p>
+                    </div>
+                    <div class="match-option p-4 bg-white rounded-lg shadow-sm cursor-pointer" data-response="pragmatic">
+                        <p class="font-semibold text-amber-600 mb-1">"We're probably deleting this anyway"</p>
+                        <p class="text-sm text-slate-500">Issue open, file slated for removal</p>
+                    </div>
+                    <div class="match-option p-4 bg-white rounded-lg shadow-sm cursor-pointer" data-response="action">
+                        <p class="font-semibold text-purple-600 mb-1">"Let's fix it... wait, let's delete it"</p>
+                        <p class="text-sm text-slate-500">PR submitted, then pivoted to deletion</p>
+                    </div>
+                </div>
+
+                <!-- Drop Zones -->
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="drop-zone rounded-lg p-4 flex flex-col items-center justify-center text-center" data-project="sqlalchemy">
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mb-2">
+                            <span class="text-red-600 font-bold">S</span>
+                        </div>
+                        <span class="font-semibold text-sm">SQLAlchemy</span>
+                        <div class="matched-response mt-2 text-xs"></div>
+                    </div>
+                    <div class="drop-zone rounded-lg p-4 flex flex-col items-center justify-center text-center" data-project="arrow">
+                        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-2">
+                            <span class="text-amber-600 font-bold">A</span>
+                        </div>
+                        <span class="font-semibold text-sm">Apache Arrow</span>
+                        <div class="matched-response mt-2 text-xs"></div>
+                    </div>
+                    <div class="drop-zone rounded-lg p-4 flex flex-col items-center justify-center text-center" data-project="sklearn">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                            <span class="text-purple-600 font-bold">sk</span>
+                        </div>
+                        <span class="font-semibold text-sm">scikit-learn</span>
+                        <div class="matched-response mt-2 text-xs"></div>
+                    </div>
+                </div>
+
+                <div id="match-result" class="hidden mt-6 text-center p-4 rounded-lg"></div>
+            </div>
+
+            <div class="text-center">
+                <button id="check-matches-btn" class="bg-slate-900 text-white px-8 py-3 rounded-lg font-semibold sans hover:bg-slate-700 transition disabled:opacity-50" disabled>
+                    Check Your Matches →
+                </button>
+                <button id="reset-matches-btn" class="ml-3 text-slate-500 underline text-sm sans hidden">Reset</button>
+            </div>
+        </section>
+
+        <!-- Act II: The Three Responses -->
+        <section class="fade-in mb-32">
+            <p class="chapter-number text-slate-400 mb-3">Act II</p>
+            <h2 class="text-4xl font-bold mb-8">The Three Responses</h2>
+
+            <!-- Response Spectrum -->
+            <div class="mb-16">
+                <p class="text-sm text-slate-500 text-center mb-4 sans font-medium">THE RESPONSE SPECTRUM</p>
+                <div class="spectrum-bar rounded-lg overflow-hidden shadow-sm">
+                    <div class="spectrum-segment bg-red-500 flex-1 py-3">Defensive</div>
+                    <div class="spectrum-segment bg-amber-500 flex-1 py-3">Pragmatic</div>
+                    <div class="spectrum-segment bg-purple-500 flex-1 py-3">Action</div>
+                </div>
+                <div class="flex justify-between mt-2 text-xs text-slate-500 sans">
+                    <span>SQLAlchemy</span>
+                    <span>Apache Arrow</span>
+                    <span>scikit-learn</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SQLAlchemy Deep Dive -->
+        <section class="fade-in mb-32">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="response-badge bg-red-100 text-red-700">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    Closed • Converted to Discussion
+                </div>
+                <span class="text-sm text-slate-400 mono">8 minutes</span>
+            </div>
+
+            <h3 class="text-3xl font-bold mb-2">SQLAlchemy</h3>
+            <p class="text-xl text-slate-500 italic mb-8">"What are we doing here exactly?"</p>
+
+            <div class="github-quote defensive mb-8">
+                <div class="flex items-center gap-2 mb-3 text-sm text-slate-500 sans">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="font-semibold">@zzzeek</span>
+                    <span>• SQLAlchemy maintainer</span>
+                    <a href="https://github.com/sqlalchemy/sqlalchemy/issues/13078#issuecomment-3754705868:~:text=What%20are%20we%20doing%20here%20exactly%3F%20We%20work%20with%20use%20cases%20and%20problems%20to%20be%20solved%20here%20and%20I%20think%20I%20asked%20pretty%20clearly%20for%20that.%20And%20my%20suggestion%20is%20pretty%20much%20going%20to%20be%20the%20same%2C%20to%20make%20sure%20you%20set%20server_version_info%20to%20something.%20converting%20this%20to%20discussion%20since%20there%20is%20no%20bug%20here." target="_blank" class="ml-auto text-slate-400 hover:text-red-500 transition" title="View Comment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+                <p class="text-slate-700 leading-relaxed">
+                    "What are we doing here exactly? We work with use cases and problems to be solved here. [...]
+                    if the pool is disposed, you should not be using connections from that pool anymore. This is expected behavior."
+                </p>
+            </div>
+
+            <p class="text-lg leading-relaxed mb-6">
+                I pointed out an inconsistency: <strong>the same method had None-guards in some places but not others</strong>.
+                If it was intentional, why the inconsistency?
+            </p>
+
+            <div class="github-quote defensive mb-8">
+                <div class="flex items-center gap-2 mb-3 text-sm text-slate-500 sans">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="font-semibold">@zzzeek</span>
+                    <span>• Response to inconsistency</span>
+                    <a href="https://github.com/sqlalchemy/sqlalchemy/issues/13078#issuecomment-3754705868:~:text=or%20that%20just%20could%20be%20old%20code%20that%20did%20this%20for%20no%20real%20reason." target="_blank" class="ml-auto text-slate-400 hover:text-red-500 transition" title="View Comment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+                <p class="text-slate-700 leading-relaxed italic">
+                    "or that just could be old code that did this for no real reason"
+                </p>
+            </div>
+
+            <div class="bg-slate-100 rounded-xl p-6 mb-8">
+                <p class="text-sm text-slate-500 mb-4 sans font-medium">THE BUG: INCONSISTENT NONE-GUARDS</p>
+                <div class="code-block p-4">
+                    <pre><code><span class="comment"># ✗ No None guard (Unsafe)</span>
+<span class="error-highlight"><span class="keyword">if</span> self.server_version_info[0] <span class="keyword">not in</span> list(range(8, 17)): <span class="comment"># 💥 TypeError</span></span>
+    util.warn(<span class="string">"Unrecognized server version info..."</span>)
+
+<span class="keyword">if</span> self.server_version_info >= MS_2008_VERSION:
+    self.supports_multivalues_insert = <span class="keyword">True</span>
+<span class="keyword">else</span>:
+    self.supports_multivalues_insert = <span class="keyword">False</span>
+
+<span class="keyword">if</span> self.deprecate_large_types <span class="keyword">is</span> <span class="none-val">None</span>:
+    self.deprecate_large_types = (
+        self.server_version_info >= MS_2012_VERSION
+    )
+
+<span class="comment"># ✓ Has None guard (Safe)</span>
+self._supports_offset_fetch = (
+    <span class="keyword">self.server_version_info</span> <span class="keyword">and</span> self.server_version_info[0] >= 11
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                <div class="text-3xl">⏱️</div>
+                <div>
+                    <p class="font-semibold text-red-800">30 hours from issue to lock</p>
+                    <p class="text-sm text-red-600">Converted to discussion, labeled "expected behavior"</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Apache Arrow Deep Dive -->
+        <section class="fade-in mb-32">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="response-badge bg-amber-100 text-amber-700 pulse-glow">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Still Open • File Likely Deleted
+                </div>
+                <span class="text-sm text-slate-400 mono">17 minutes</span>
+            </div>
+
+            <h3 class="text-3xl font-bold mb-2">Apache Arrow</h3>
+            <p class="text-xl text-slate-500 italic mb-8">The Sound of Silence (Then Pragmatism)</p>
+
+            <div class="github-quote pragmatic mb-8">
+                <div class="flex items-center gap-2 mb-3 text-sm text-slate-500 sans">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="font-semibold">@raulcd</span>
+                    <span>• Arrow maintainer</span>
+                    <a href="https://github.com/apache/arrow/issues/48855#issuecomment-3749701535" target="_blank" class="ml-auto text-slate-400 hover:text-amber-500 transition" title="View Comment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+                <p class="text-slate-700 leading-relaxed">
+                    "those jobs have been failing for several weeks now [...] Were you manually using this?"
+                </p>
+            </div>
+
+            <p class="text-lg leading-relaxed mb-6">
+                My honest response revealed the nature of the investigation:
+            </p>
+
+            <div class="github-quote mb-8" style="border-left-color: #6b7280;">
+                <div class="flex items-center gap-2 mb-3 text-sm text-slate-500 sans">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="font-semibold">@PythonicVarun</span>
+                    <span>• Reporter</span>
+                    <a href="https://github.com/apache/arrow/issues/48855#issuecomment-3749741601" target="_blank" class="ml-auto text-slate-400 hover:text-slate-600 transition" title="View Comment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+                <p class="text-slate-700 leading-relaxed italic">
+                    "I was simply auditing the CI scripts and found this issue using static analysis."
+                </p>
+            </div>
+
+            <div class="bg-slate-100 rounded-xl p-6 mb-8">
+                <p class="text-sm text-slate-500 mb-4 sans font-medium">THE BUG: MISSING ENVIRONMENT FALLBACK</p>
+                <div class="code-block p-4">
+                    <pre><code>top_level = os.environ.get(<span class="string">"ARROW_HOME"</span>)
+
+<span class="comment"># No check if top_level is None!</span>
+<span class="error-highlight">path = os.path.join(top_level, <span class="string">"subdir"</span>)  <span class="comment"># 💥 TypeError</span></span></code></pre>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <div class="text-3xl">🗑️</div>
+                <div>
+                    <p class="font-semibold text-amber-800">File slated for deletion</p>
+                    <p class="text-sm text-amber-600"><a href="https://github.com/apache/arrow/issues/48855" target="_blank" class="underline hover:text-amber-800">Issue #48855</a> • No follow-up as of Jan 25, 2026</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- scikit-learn Deep Dive -->
+        <section class="fade-in mb-32">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="response-badge bg-purple-100 text-purple-700">
+                    <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                    PR Submitted • Pivoted to Delete
+                </div>
+                <span class="text-sm text-slate-400 mono">7 days</span>
+            </div>
+
+            <h3 class="text-3xl font-bold mb-2">scikit-learn</h3>
+            <p class="text-xl text-slate-500 italic mb-8">The Plot Twist</p>
+
+            <div class="bg-purple-50 rounded-xl p-6 mb-8 border border-purple-200">
+                <p class="text-sm text-purple-600 mb-3 sans font-semibold">THE TIMELINE OF GOOD INTENTIONS</p>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="mono text-slate-400 w-24">Jan 14</span>
+                        <span>Issue filed, reporter offers to fix</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="mono text-slate-400 w-24">Jan 21</span>
+                        <span>PR <a class="text-purple-700 hover:text-blue-800 no-underline hover:underline" href="https://github.com/scikit-learn/scikit-learn/pull/33120">#33120</a> submitted</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-purple-700 font-semibold">
+                        <span class="mono text-slate-400 w-24">Jan 23</span>
+                        <span>Plot twist arrives...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="github-quote action mb-8">
+                <div class="flex items-center gap-2 mb-3 text-sm text-slate-500 sans">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="font-semibold">@ogrisel</span>
+                    <span>• scikit-learn maintainer</span>
+                    <a href="https://github.com/scikit-learn/scikit-learn/issues/33079#issuecomment-3790262496" target="_blank" class="ml-auto text-slate-400 hover:text-purple-500 transition" title="View Comment">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+                <p class="text-slate-700 leading-relaxed">
+                    "This script has many other problems... I would rather just delete this file"
+                </p>
+            </div>
+
+            <p class="text-lg leading-relaxed mb-8">
+                What started as a bug fix became an archaeological excavation.
+                The file had been importing <code class="mono bg-slate-100 px-2 py-1 rounded text-sm">sklearn.metrics.jaccard_similarity_score</code>—a
+                function that was <strong><a class="decoration-none hover:underline" target="_blank" href="https://scikit-learn.org/0.22/modules/generated/sklearn.metrics.jaccard_similarity_score.html">deprecated in v0.23 (2020)</a></strong> and removed long ago.
+            </p>
+        </section>
+
+        <!-- Timeline of Decay -->
+        <section class="fade-in mb-32">
+            <h3 class="text-2xl font-bold mb-2 text-center">The Timeline of Decay</h3>
+            <p class="text-center text-slate-500 mb-12">Six years of broken benchmarks, silently failing</p>
+
+            <div class="bg-slate-900 rounded-2xl p-8 text-white">
+                <div class="relative">
+                    <!-- Timeline Track -->
+                    <div class="timeline-track mb-16">
+                        <div class="timeline-fill bg-gradient-to-r from-green-500 via-amber-500 to-red-500" id="decay-timeline-fill" style="width: 0%"></div>
+                        <div class="timeline-marker bg-green-500" style="left: 0%"></div>
+                        <div class="timeline-marker bg-red-500" style="left: 100%"></div>
+                    </div>
+
+                    <!-- Timeline Labels -->
+                    <div class="flex justify-between">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-400 mb-2">2020</div>
+                            <div class="text-sm text-slate-400">v0.23 Released</div>
+                            <div class="text-xs text-slate-500 mt-1">Function deprecated</div>
+                            <div class="text-xs text-slate-500">Benchmarks break silently</div>
+                        </div>
+
+                        <div class="text-center">
+                            <div class="text-6xl font-bold text-red-400 mb-2" id="years-counter">0</div>
+                            <div class="text-sm text-slate-400">years unnoticed</div>
+                        </div>
+
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-red-400 mb-2">2026</div>
+                            <div class="text-sm text-slate-400">Discovery</div>
+                            <div class="text-xs text-slate-500 mt-1">Type checker finds it</div>
+                            <div class="text-xs text-slate-500">File to be deleted</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-12 pt-8 border-t border-slate-700">
+                    <p class="text-slate-400 text-lg">
+                        How many performance decisions were made based on broken benchmark data?
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act III: The Archaeology -->
+        <section class="fade-in mb-32">
+            <p class="chapter-number text-slate-400 mb-3">Act III</p>
+            <h2 class="text-4xl font-bold mb-8">The Archaeology of Software Evolution</h2>
+
+            <p class="text-xl leading-relaxed mb-8">
+                These aren't just bugs. They're fossils—artifacts of decisions made years ago,
+                preserved in code that "worked" until it didn't.
+            </p>
+
+            <div class="grid gap-6 mb-12">
+                <!-- SQLAlchemy Fossil -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-red-500">
+                    <h4 class="font-bold mb-2 flex items-center gap-2">
+                        <span class="text-red-500">🦴</span> SQLAlchemy: Legacy Cruft
+                    </h4>
+                    <p class="text-slate-600">
+                        Inconsistent None-guards suggest code evolved over time. Some paths were hardened,
+                        others forgotten. The maintainer's candid admission:
+                        <em>"old code that did this for no real reason."</em>
+                    </p>
+                </div>
+
+                <!-- Arrow Fossil -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-amber-500">
+                    <h4 class="font-bold mb-2 flex items-center gap-2">
+                        <span class="text-amber-500">🦴</span> Apache Arrow: CI Assumptions
+                    </h4>
+                    <p class="text-slate-600">
+                        Environment variables that always existed in CI, until they didn't.
+                    </p>
+                </div>
+
+                <!-- sklearn Fossil -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-purple-500">
+                    <h4 class="font-bold mb-2 flex items-center gap-2">
+                        <span class="text-purple-500">🦴</span> scikit-learn: The Long Tail
+                    </h4>
+                    <p class="text-slate-600">
+                        A benchmark script importing from a module that no longer exists.
+                        Six years of silent failure. The long tail of API deprecation.
+                    </p>
+                </div>
+            </div>
+
+            <!-- The Common Pattern -->
+            <div class="bg-slate-100 rounded-xl p-8">
+                <h3 class="font-bold text-xl mb-6 text-center">The Pattern They All Share</h3>
+                <div class="code-block p-6 text-center">
+                    <pre class="text-lg"><code>value = get_something_that_might_not_exist()
+<span class="error-highlight">result = value.do_thing()  <span class="comment"># What if value is None?</span></span></code></pre>
+                </div>
+                <p class="text-center text-slate-600 mt-6">
+                    The assumption that kills: <em>"This will always be set."</em>
+                </p>
+            </div>
+        </section>
+
+        <!-- The Scoreboard -->
+        <section class="fade-in mb-32">
+            <h2 class="text-3xl font-bold mb-8 text-center">The Final Scoreboard</h2>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-12">
+                <div class="bg-red-50 rounded-xl p-6 text-center border border-red-200">
+                    <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">🛡️</span>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">SQLAlchemy</h3>
+                    <p class="text-red-600 font-semibold mb-2">Rejected</p>
+                    <p class="text-sm text-slate-600">"Expected behavior"</p>
+                    <div class="mt-4 pt-4 border-t border-red-200 flex flex-col gap-1 text-xs">
+                        <span class="mono text-slate-400">8 min response</span>
+                        <a href="https://github.com/sqlalchemy/sqlalchemy/issues/13078" target="_blank" class="text-red-700 hover:underline">View Issue →</a>
+                        <a href="https://github.com/sqlalchemy/sqlalchemy/discussions/13080" target="_blank" class="text-red-700 hover:underline">View Discussion →</a>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 rounded-xl p-6 text-center border border-amber-200">
+                    <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">🗑️</span>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">Apache Arrow</h3>
+                    <p class="text-amber-600 font-semibold mb-2">Deletion Pending</p>
+                    <p class="text-sm text-slate-600">"We're removing this"</p>
+                    <div class="mt-4 pt-4 border-t border-amber-200 flex flex-col gap-1 text-xs">
+                        <span class="mono text-slate-400">17 min response</span>
+                        <a href="https://github.com/apache/arrow/issues/48855" target="_blank" class="text-amber-700 hover:underline">View Issue →</a>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 rounded-xl p-6 text-center border border-purple-200">
+                    <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">🔄</span>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">scikit-learn</h3>
+                    <p class="text-purple-600 font-semibold mb-2">PR → Delete</p>
+                    <p class="text-sm text-slate-600">"Just delete the file"</p>
+                    <div class="mt-4 pt-4 border-t border-purple-200 flex flex-col gap-1 text-xs">
+                        <span class="mono text-slate-400">7 day engagement</span>
+                        <a href="https://github.com/scikit-learn/scikit-learn/issues/33079" target="_blank" class="text-purple-700 hover:underline">View Issue →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Punchline -->
+            <div class="bg-slate-900 text-white rounded-2xl p-8 text-center">
+                <p class="text-5xl font-bold mb-4">3 / 3</p>
+                <p class="text-xl text-slate-300">
+                    Projects where the "fix" wasn't fixing code
+                </p>
+                <p class="text-slate-400 mt-4">
+                    Reject • Delete • Delete
+                </p>
+            </div>
+        </section>
+
+        <!-- Interactive Code Checker -->
+        <section class="fade-in mb-32">
+            <p class="chapter-number text-slate-400 mb-3">Interactive</p>
+            <h2 class="text-3xl font-bold mb-4">Spot the None-Bug</h2>
+            <p class="text-lg text-slate-600 mb-8">
+                Can you identify the dangerous line? Click on the line that will crash when the environment variable is missing.
+            </p>
+
+            <div class="bg-slate-900 rounded-xl overflow-hidden mb-8">
+                <div class="bg-slate-800 px-4 py-2 flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="ml-4 text-slate-400 text-sm mono">config_loader.py</span>
+                </div>
+                <div class="p-6 text-sm">
+                    <div id="code-challenge" class="mono space-y-0.5 code-block !bg-transparent">
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="1">
+                            <span class="text-slate-500 w-8 flex-shrink-0">1</span>
+                            <span><span class="keyword">import</span> os</span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="2">
+                            <span class="text-slate-500 w-8 flex-shrink-0">2</span>
+                            <span><span class="keyword">import</span> json</span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="3">
+                            <span class="text-slate-500 w-8 flex-shrink-0">3</span>
+                            <span></span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="4">
+                            <span class="text-slate-500 w-8 flex-shrink-0">4</span>
+                            <span><span class="keyword">def</span> <span class="function">load_settings</span>():</span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="5">
+                            <span class="text-slate-500 w-8 flex-shrink-0">5</span>
+                            <span class="pl-8">config_dir = os.environ.get(<span class="string">"CONFIG_PATH"</span>)</span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="6" data-correct="true">
+                            <span class="text-slate-500 w-8 flex-shrink-0">6</span>
+                            <span class="pl-8">settings_file = os.path.join(config_dir, <span class="string">"settings.json"</span>)</span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="7">
+                            <span class="text-slate-500 w-8 flex-shrink-0">7</span>
+                            <span></span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="8">
+                            <span class="text-slate-500 w-8 flex-shrink-0">8</span>
+                            <span class="pl-8"><span class="keyword">with</span> open(settings_file) <span class="keyword">as</span> f:</span>
+                        </div>
+                        <div class="code-line py-1.5 px-3 rounded cursor-pointer hover:bg-slate-800 transition flex" data-line="9">
+                            <span class="text-slate-500 w-8 flex-shrink-0">9</span>
+                            <span class="pl-16"><span class="keyword">return</span> json.load(f)</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="code-challenge-feedback" class="px-6 py-4 bg-slate-800 border-t border-slate-700 hidden">
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="fade-in mb-32">
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-4">Check Your Own Code</h2>
+                <p class="text-slate-300 mb-8 text-lg">
+                    These bugs hid in codebases with <strong class="text-white">92,600 combined stars</strong>.
+                    What's hiding in yours?
+                </p>
+
+                <div class="space-y-6 mb-10">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 font-bold">1</div>
+                        <div>
+                            <p class="font-semibold text-lg">Run a type checker</p>
+                            <p class="text-slate-400 mono text-sm mt-1">$ ty check your_project/</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 font-bold">2</div>
+                        <div>
+                            <p class="font-semibold text-lg">Search for the patterns</p>
+                            <p class="text-slate-400 text-sm mt-1">Look for: <code class="text-amber-400">os.environ.get()</code> without fallbacks, <code class="text-amber-400">Optional</code> types used directly</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 font-bold">3</div>
+                        <div>
+                            <p class="font-semibold text-lg">Check your CI scripts</p>
+                            <p class="text-slate-400 text-sm mt-1">The code nobody maintains is the code that breaks silently</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4">
+                    <a href="https://github.com/PythonicVarun/py-libraries-analysis" target="_blank"
+                       class="inline-flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-lg font-semibold sans hover:bg-slate-100 transition">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        View Analysis Repository
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Closing -->
+        <section class="fade-in text-center py-16 border-t border-slate-200">
+            <p class="text-3xl md:text-4xl font-serif leading-relaxed max-w-2xl mx-auto mb-12">
+                In Python's <code class="mono text-red-600 bg-red-50 px-2 py-1 rounded">None</code>-handling underworld,
+                every TypeError tells a story.
+            </p>
+
+            <p class="text-2xl text-slate-600 mb-12">
+                This one told three.
+            </p>
+
+            <!-- Parallel Timelines -->
+            <div class="grid md:grid-cols-3 gap-6 mb-16 text-sm">
+                <div class="p-4 rounded-lg bg-red-50 border border-red-200">
+                    <p class="font-bold text-red-700 mb-1">SQLAlchemy</p>
+                    <p class="text-slate-600">Closed in 30 hours</p>
+                    <p class="mono text-xs text-slate-400 mt-2">→ Discussion</p>
+                </div>
+                <div class="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                    <p class="font-bold text-amber-700 mb-1">Apache Arrow</p>
+                    <p class="text-slate-600">Open for <span id="arrow-days">11</span>+ days</p>
+                    <p class="mono text-xs text-slate-400 mt-2">→ Pending deletion</p>
+                </div>
+                <div class="p-4 rounded-lg bg-purple-50 border border-purple-200">
+                    <p class="font-bold text-purple-700 mb-1">scikit-learn</p>
+                    <p class="text-slate-600">PR in 9 days, pivoted</p>
+                    <p class="mono text-xs text-slate-400 mt-2">→ File to be deleted</p>
+                </div>
+            </div>
+
+            <p class="text-xl text-slate-500 max-w-xl mx-auto">
+                How many more <code class="mono bg-slate-100 px-2 py-1 rounded text-red-600">TypeErrors</code>
+                are hiding in plain sight in production code?
+            </p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 py-12 border-t border-slate-200">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <p class="text-slate-500 mb-4">
+                This is a data story about type safety in Python's open-source ecosystem.
+                <br>No code was harmed in the making of this story—only discovered.
+            </p>
+            <p class="text-sm text-slate-400 mono">
+                Built with care • Inspired by the NYT Graphics team
+            </p>
+            <div class="mt-8 pt-8 border-t border-slate-200 flex flex-col items-center gap-2">
+                <a href="visualizer/" class="text-xs text-slate-400 hover:text-slate-600 transition underline decoration-dotted">
+                    View Project Visualizer
+                </a>
+                <a href="https://github.com/PythonicVarun/py-libraries-analysis/tree/master/datastory/PROMPT.md" class="text-xs text-slate-400 hover:text-slate-600 transition underline decoration-dotted">
+                    View Datastory Generation Prompt
+                </a>
+                <!-- Disclaimer regarding the analysis :) -->
+                <p class="text-[10px] text-slate-500 mt-4 max-w-lg mx-auto">
+                    <strong>Disclaimer:</strong> This analysis is for educational and research purposes only. It explores patterns in software maintenance and is not intended to target, criticize, or defame any individuals or organizations. I respect all open source contributors and organizations. Open source maintenance is hard work.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll Progress Indicator
+        window.addEventListener('scroll', () => {
+            const scrollProgress = document.getElementById('scroll-progress');
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            scrollProgress.style.width = scrollPercent + '%';
+        });
+
+        // Fade-in animations
+        const fadeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+        // Hero stars counter
+        function animateCounter(element, target, duration = 2000, prefix = '') {
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (target - start) * eased);
+                element.textContent = prefix + current.toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = prefix + target.toLocaleString();
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        const heroObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                animateCounter(document.getElementById('hero-stars'), 92600, 2500);
+                heroObserver.disconnect();
+            }
+        });
+        heroObserver.observe(document.querySelector('header'));
+
+        // Response Time Game
+        function formatTime(minutes) {
+            if (minutes < 60) return minutes + (minutes === 1 ? ' min' : ' mins');
+            if (minutes < 1440) {
+                const hours = Math.round(minutes / 60);
+                return hours + (hours === 1 ? ' hour' : ' hours');
+            }
+            const days = Math.round(minutes / 1440);
+            return days + (days === 1 ? ' day' : ' days');
+        }
+
+        document.querySelectorAll('.slider-response').forEach(slider => {
+            const container = slider.closest('div[data-project]');
+            const display = container.querySelector('.guess-display');
+
+            const updateDisplay = () => {
+                display.textContent = 'Your guess: ' + formatTime(parseInt(slider.value));
+            };
+
+            slider.addEventListener('input', updateDisplay);
+            updateDisplay(); // Initialize on load
+        });
+
+        document.getElementById('reveal-times-btn').addEventListener('click', function() {
+            const actuals = {
+                sqlalchemy: { time: 8, label: '8 minutes', surprise: 'Lightning fast rejection!' },
+                arrow: { time: 17, label: '17 minutes', surprise: 'Quick pragmatic response' },
+                sklearn: { time: 10080, label: '7 days', surprise: 'Meaningful engagement took time' }
+            };
+
+            document.querySelectorAll('#response-time-game > div').forEach(container => {
+                const project = container.dataset.project;
+                const actual = actuals[project];
+                const slider = container.querySelector('.slider-response');
+                const guess = parseInt(slider.value);
+                const resultDiv = container.querySelector('.result-display');
+
+                const accuracy = Math.abs(guess - actual.time) / actual.time;
+                let verdict, color;
+
+                if (accuracy < 0.2) {
+                    verdict = '🎯 Spot on!';
+                    color = 'text-green-600';
+                } else if (accuracy < 0.5) {
+                    verdict = '👍 Close!';
+                    color = 'text-amber-600';
+                } else {
+                    verdict = '😮 Surprise!';
+                    color = 'text-red-600';
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="p-4 rounded-lg bg-slate-50">
+                        <p class="text-2xl font-bold ${color} mb-1">${verdict}</p>
+                        <p class="text-lg">Actual: <strong>${actual.label}</strong></p>
+                        <p class="text-sm text-slate-500 mt-1">${actual.surprise}</p>
+                    </div>
+                `;
+                resultDiv.classList.remove('hidden');
+                slider.disabled = true;
+            });
+
+            this.textContent = '✓ Times Revealed';
+            this.disabled = true;
+            this.classList.add('bg-green-600');
+        });
+
+        // Match Game
+        const correctMatches = {
+            sqlalchemy: 'defensive',
+            arrow: 'pragmatic',
+            sklearn: 'action'
+        };
+
+        let selectedResponse = null;
+        let matches = {};
+
+        document.querySelectorAll('.match-option').forEach(option => {
+            option.addEventListener('click', function() {
+                if (this.classList.contains('matched')) return;
+
+                document.querySelectorAll('.match-option').forEach(o => o.classList.remove('ring-2', 'ring-blue-500'));
+                this.classList.add('ring-2', 'ring-blue-500');
+                selectedResponse = this.dataset.response;
+
+                document.querySelectorAll('.drop-zone').forEach(z => z.classList.add('active'));
+            });
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('click', function() {
+                if (!selectedResponse) return;
+                if (this.classList.contains('filled')) return;
+
+                const project = this.dataset.project;
+                matches[project] = selectedResponse;
+
+                // Visual feedback
+                const responseLabels = {
+                    defensive: '"Not a bug"',
+                    pragmatic: '"Deleting this"',
+                    action: '"Fix → Delete"'
+                };
+
+                const colors = {
+                    defensive: 'border-red-500 bg-red-50',
+                    pragmatic: 'border-amber-500 bg-amber-50',
+                    action: 'border-purple-500 bg-purple-50'
+                };
+
+                this.classList.add('filled', ...colors[selectedResponse].split(' '));
+                this.querySelector('.matched-response').textContent = responseLabels[selectedResponse];
+
+                // Mark response as used
+                document.querySelector(`[data-response="${selectedResponse}"]`).classList.add('matched');
+
+                // Reset selection
+                selectedResponse = null;
+                document.querySelectorAll('.match-option').forEach(o => o.classList.remove('ring-2', 'ring-blue-500'));
+                document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('active'));
+
+                // Enable check button if all matched
+                if (Object.keys(matches).length === 3) {
+                    document.getElementById('check-matches-btn').disabled = false;
+                }
+            });
+        });
+
+        document.getElementById('check-matches-btn').addEventListener('click', function() {
+            let correct = 0;
+            Object.keys(matches).forEach(project => {
+                if (matches[project] === correctMatches[project]) correct++;
+            });
+
+            const resultDiv = document.getElementById('match-result');
+            resultDiv.classList.remove('hidden');
+
+            if (correct === 3) {
+                resultDiv.className = 'mt-6 text-center p-4 rounded-lg bg-green-100 border border-green-300';
+                resultDiv.innerHTML = `
+                    <p class="text-xl font-bold text-green-700">🎉 Perfect! 3/3 correct</p>
+                    <p class="text-green-600 mt-1">You understand maintainer psychology!</p>
+                `;
+            } else {
+                resultDiv.className = 'mt-6 text-center p-4 rounded-lg bg-amber-100 border border-amber-300';
+                resultDiv.innerHTML = `
+                    <p class="text-xl font-bold text-amber-700">${correct}/3 correct</p>
+                    <p class="text-amber-600 mt-1">The responses might surprise you—scroll down to see the details!</p>
+                `;
+            }
+
+            this.textContent = '✓ Checked';
+            this.disabled = true;
+            document.getElementById('reset-matches-btn').classList.remove('hidden');
+        });
+
+        document.getElementById('reset-matches-btn').addEventListener('click', function() {
+            matches = {};
+            selectedResponse = null;
+
+            document.querySelectorAll('.match-option').forEach(o => {
+                o.classList.remove('matched', 'ring-2', 'ring-blue-500');
+            });
+
+            document.querySelectorAll('.drop-zone').forEach(z => {
+                z.classList.remove('filled', 'border-red-500', 'bg-red-50', 'border-amber-500', 'bg-amber-50', 'border-purple-500', 'bg-purple-50', 'active');
+                z.querySelector('.matched-response').textContent = '';
+            });
+
+            document.getElementById('match-result').classList.add('hidden');
+            document.getElementById('check-matches-btn').disabled = true;
+            document.getElementById('check-matches-btn').textContent = 'Check Your Matches →';
+            this.classList.add('hidden');
+        });
+
+        // Timeline animation
+        const timelineObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                // Animate timeline fill
+                setTimeout(() => {
+                    document.getElementById('decay-timeline-fill').style.width = '100%';
+                }, 300);
+
+                // Animate years counter
+                animateCounter(document.getElementById('years-counter'), 6, 2000);
+
+                timelineObserver.disconnect();
+            }
+        }, { threshold: 0.5 });
+
+        const timelineSection = document.querySelector('#decay-timeline-fill');
+        if (timelineSection) {
+            timelineObserver.observe(timelineSection.closest('section'));
+        }
+
+        // Code Challenge
+        document.querySelectorAll('#code-challenge .code-line').forEach(line => {
+            line.addEventListener('click', function() {
+                const feedback = document.getElementById('code-challenge-feedback');
+                const isCorrect = this.dataset.correct === 'true';
+
+                document.querySelectorAll('#code-challenge .code-line').forEach(l => {
+                    l.classList.remove('bg-red-900/50', 'bg-green-900/30', 'bg-amber-900/30');
+                });
+
+                if (isCorrect) {
+                    this.classList.add('bg-red-900/50');
+                    feedback.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">🎯</span>
+                            <div>
+                                <p class="text-green-400 font-semibold mb-1">Correct!</p>
+                                <p class="text-slate-300 text-sm">Line 6 passes <code class="text-amber-400">config_dir</code> to <code class="text-amber-400">os.path.join()</code>, but <code class="text-amber-400">config_dir</code> is <code class="text-red-400">None</code> if <code class="text-amber-400">CONFIG_PATH</code> isn't set. This raises <code class="text-red-400">TypeError: expected str, bytes or os.PathLike object, not NoneType</code></p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    this.classList.add('bg-amber-900/30');
+                    feedback.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">🤔</span>
+                            <div>
+                                <p class="text-amber-400 font-semibold mb-1">Not quite!</p>
+                                <p class="text-slate-300 text-sm">This line is safe. Look for where a value from <code class="text-amber-400">os.environ.get()</code> is used without checking if it's <code class="text-red-400">None</code>.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                feedback.classList.remove('hidden');
+            });
+        });
+
+        // Calculate Arrow days open
+        const arrowIssueDate = new Date('2026-01-14');
+        const today = new Date();
+        const daysOpen = Math.floor((today - arrowIssueDate) / (1000 * 60 * 60 * 24));
+        if (daysOpen > 0) {
+            document.getElementById('arrow-days').textContent = daysOpen;
+        }
+    </script>
+</body>
+</html>
